@@ -40,14 +40,15 @@ class USBDevice(object):
     def __del__(self):
         self._libfli.FLIClose(self._dev)
         
-    def get_serial_num(self):
+    def get_serial_number(self):
         serial = ctypes.create_string_buffer(BUFFER_SIZE)
         self._libfli.FLIGetSerialString(self._dev,serial,c_size_t(BUFFER_SIZE))
         return serial.value
     
     @classmethod    
     def find_devices(cls):
-        "locates all FLI USB devices and returns a list of USBDevice objects"
+        """locates all FLI USB devices is the current domain and returns a 
+           list of USBDevice objects"""
 
         tmplist = POINTER(c_char_p)()      
         cls._libfli.FLIList(cls._domain, byref(tmplist)) #allocates memory
@@ -59,6 +60,28 @@ class USBDevice(object):
             i += 1
         cls._libfli.FLIFreeList(tmplist)            #frees memory   
         return devs
+
+    @classmethod    
+    def locate_device(cls, serial_number):
+        """locates all FLI USB devices is the current domain and returns a 
+           list of USBDevice objects
+            
+           returns None if no match is found
+
+           raises FLIError if more than one device matching the serial_number is 
+                  found, i.e., there is a conflict
+        """
+        dev_match = None        
+        devs = cls.find_devices()
+        for dev in devs:
+            dev_sn = dev.get_serial_number()
+            if dev_sn == serial_number:       #match found
+                if dev_match is None:         #first match
+                    dev_match = dev
+                else:                         #conflict
+                    msg = "Device Conflict: there are more than one devices matching the serial_number '%s'" % serial_number
+                    raise FLIError(msg)        
+        return dev_match
 ###############################################################################
 #  TEST CODE
 ###############################################################################
