@@ -17,7 +17,8 @@ try:
 except ImportError:
     from odict import OrderedDict
 
-from ctypes import pointer, POINTER, byref, Structure, c_char, c_char_p, c_long, c_ubyte
+from ctypes import pointer, POINTER, byref, sizeof, Structure, c_char,\
+                   c_char_p, c_long, c_ubyte, c_uint16, c_double
 
 
 import numpy
@@ -58,6 +59,7 @@ class USBCamera(USBDevice):
         return info
 
     def get_image_size(self):
+        "returns (row_width, img_rows, img_size)"
         left, top, right, bottom   = (c_long(),c_long(),c_long(),c_long())        
         self._libfli.FLIGetVisibleArea(self._dev, byref(left), byref(top), byref(right), byref(bottom))    
         row_width = (right.value - left.value)/self.hbin
@@ -73,7 +75,7 @@ class USBCamera(USBDevice):
         self._libfli.FLIGetVisibleArea(self._dev, byref(left), byref(top), byref(right), byref(bottom))    
         row_width = (right.value - left.value)/hbin
         img_rows  = (bottom.value - top.value)/vbin
-        self._libfli.FLISetImageArea(self._dev, left, top, left + row_width, top + img_rows)
+        self._libfli.FLISetImageArea(self._dev, left, top, left.value + row_width, top.value + img_rows)
         self._libfli.FLISetHBin(self._dev, hbin)
         self._libfli.FLISetVBin(self._dev, vbin)
         self.hbin = hbin
@@ -94,7 +96,8 @@ class USBCamera(USBDevice):
         return T.value
 
     def set_exposure(self, exptime, frametype = "normal"):
-        "set the exposure time and the 'frametype' as 'normal' or 'dark'"
+        """set the exposure time, 'exptime' in milliseconds and the 
+           'frametype' as 'normal' or 'dark'"""
         exptime = c_long(exptime)        
         if frametype == "normal":
             frametype = fliframe_t(FLI_FRAME_TYPE_NORMAL)
@@ -138,10 +141,14 @@ class USBCamera(USBDevice):
 #  TEST CODE
 ###############################################################################
 if __name__ == "__main__":
-    from pylab import *
     cams = USBCamera.find_devices()
     cam0 = cams[0]
+    print "info:", cam0.get_info()
+    print "image size:", cam0.get_image_size()
+    print "temperature:", cam0.get_temperature()
+    cam0.set_image_binning(2,2)
+    cam0.set_bit_depth("16bit")
     cam0.set_exposure(5)
     img = cam0.take_photo()
-    imshow(img)
+    print img
     
