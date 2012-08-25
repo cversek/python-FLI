@@ -12,7 +12,8 @@ __date__   = '2012-08-16'
 
 import sys, time
 
-from ctypes import pointer, POINTER, byref, c_char, c_char_p, c_long, c_ubyte, c_double
+import ctypes
+from ctypes import pointer, POINTER, byref, c_char, c_char_p, c_long, c_ubyte, c_double, c_size_t
 
 
 import numpy
@@ -20,7 +21,8 @@ import numpy
 from lib import FLILibrary, FLIError, FLIWarning, flidomain_t, flidev_t,\
                 FLIDOMAIN_USB
 ###############################################################################
-DEBUG = True
+DEBUG = False
+BUFFER_SIZE = 64
 ###############################################################################
 class USBDevice(object):
     """ base class for all FLI USB devices"""
@@ -37,6 +39,11 @@ class USBDevice(object):
    
     def __del__(self):
         self._libfli.FLIClose(self._dev)
+        
+    def get_serial_num(self):
+        serial = ctypes.create_string_buffer(BUFFER_SIZE)
+        self._libfli.FLIGetSerialString(self._dev,serial,c_size_t(BUFFER_SIZE))
+        return serial.value
     
     @classmethod    
     def find_devices(cls):
