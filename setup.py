@@ -3,7 +3,11 @@
 desc:  Setup script for 'FLI' package.
 auth:  Craig Wm. Versek (cwv@yesinc.com)
 date:  7/25/2012
-notes: install with "python setup.py install"
+notes: Install with "python setup.py install".
+       Requires FLI SDK and Linux Kernel Module 
+       from http://www.flicamera.com/software/index.html
+       The SDK library should be built as a shared object, named 'libfli.so',
+       and located in a standard library path, such as /usr/local/lib
 """
 import platform, os, shutil
 
