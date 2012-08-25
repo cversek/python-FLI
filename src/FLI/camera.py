@@ -17,8 +17,7 @@ try:
 except ImportError:
     from odict import OrderedDict
 
-#from ctypes import pointer, POINTER, byref, Structure, c_char, c_char_p, c_long, c_ubyte
-from ctypes import *
+from ctypes import pointer, POINTER, byref, Structure, c_char, c_char_p, c_long, c_ubyte
 
 
 import numpy
