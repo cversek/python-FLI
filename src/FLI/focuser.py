@@ -52,8 +52,7 @@ class USBFocuser(USBDevice):
                               )
             if self.stepper_position is None:
                 self.get_stepper_position()
-            end_pos =  self.stepper_position + steps
-            print end_pos            
+            end_pos =  self.stepper_position + steps          
             if end_pos > self.stepper_max_extent:
                 raise FLIError("""'step_motor' command ignored because user tried to drive stepper motor to end position %d, which is beyond its max exent, %d. Use force=True to bypass""" 
                                  % (end_pos, self.stepper_max_extent)
