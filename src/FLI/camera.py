@@ -64,7 +64,7 @@ class USBCamera(USBDevice):
         self._libfli.FLIGetVisibleArea(self._dev, byref(left), byref(top), byref(right), byref(bottom))    
         row_width = (right.value - left.value)/self.hbin
         img_rows  = (bottom.value - top.value)/self.vbin
-        img_size = img_size = img_rows * row_width * sizeof(c_uint16)
+        img_size = img_rows * row_width * sizeof(c_uint16)
         return (row_width, img_rows, img_size)
 
     def set_image_area(self, ul_x, ul_y, lr_x, lr_y):
