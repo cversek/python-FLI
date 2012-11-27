@@ -13,7 +13,8 @@ __date__   = '2012-08-16'
 import sys, time
 
 import ctypes
-from ctypes import pointer, POINTER, byref, c_char, c_char_p, c_long, c_ubyte, c_double, c_size_t
+from ctypes import pointer, POINTER, byref, c_char, c_char_p, c_long, c_ubyte,\
+                   c_double, c_size_t
 
 
 import numpy
