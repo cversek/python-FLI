@@ -13,11 +13,7 @@ __date__ = '2012-08-16'
 
 import sys, time
 
-
 from ctypes import byref, c_char, c_char_p, c_long, c_ubyte, c_double
-
-
-import numpy
 
 from lib import FLILibrary, FLIError, FLIWarning, flidomain_t, flidev_t,\
                 fliframe_t, FLIDOMAIN_USB, FLIDEVICE_FILTERWHEEL
