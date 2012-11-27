@@ -48,29 +48,29 @@ class USBDevice(object):
     
     @classmethod    
     def find_devices(cls):
-        """locates all FLI USB devices is the current domain and returns a 
+        """locates all FLI USB devices in the current domain and returns a 
            list of USBDevice objects"""
 
         tmplist = POINTER(c_char_p)()      
-        cls._libfli.FLIList(cls._domain, byref(tmplist)) #allocates memory
+        cls._libfli.FLIList(cls._domain, byref(tmplist))      #allocates memory
         devs = []        
         i = 0        
         while not tmplist[i] is None:
             dev_name, model = tmplist[i].split(";")
             devs.append(cls(dev_name=dev_name,model=model))   #create device objects         
             i += 1
-        cls._libfli.FLIFreeList(tmplist)            #frees memory   
+        cls._libfli.FLIFreeList(tmplist)                      #frees memory   
         return devs
 
     @classmethod    
     def locate_device(cls, serial_number):
-        """locates all FLI USB devices is the current domain and returns a 
-           list of USBDevice objects
+        """locates the FLI USB devices in the current domain that matches the
+           'serial_number' string
             
            returns None if no match is found
 
-           raises FLIError if more than one device matching the serial_number is 
-                  found, i.e., there is a conflict
+           raises FLIError if more than one device matching the serial_number 
+                  is found, i.e., there is a conflict
         """
         dev_match = None        
         devs = cls.find_devices()
