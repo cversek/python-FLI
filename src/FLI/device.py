@@ -1,7 +1,7 @@
 """
  FLI.device.py 
  
- Object-orienting base interface for handling FLI USB devices
+ Object-oriented base interface for handling FLI USB devices
  
  author:       Craig Wm. Versek, Yankee Environmental Systems 
  author_email: cwv@yesinc.com
