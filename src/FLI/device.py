@@ -16,9 +16,6 @@ import ctypes
 from ctypes import pointer, POINTER, byref, c_char, c_char_p, c_long, c_ubyte,\
                    c_double, c_size_t
 
-
-import numpy
-
 from lib import FLILibrary, FLIError, FLIWarning, flidomain_t, flidev_t,\
                 FLIDOMAIN_USB
 ###############################################################################
