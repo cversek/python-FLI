@@ -18,7 +18,7 @@ except ImportError:
     from odict import OrderedDict
 
 from ctypes import pointer, POINTER, byref, sizeof, Structure, c_char,\
-                   c_char_p, c_long, c_ubyte, c_uint16, c_double
+                   c_char_p, c_long, c_ubyte, c_uint8, c_uint16, c_double
 
 
 import numpy
@@ -41,6 +41,8 @@ class USBCamera(USBDevice):
         USBDevice.__init__(self, dev_name = dev_name, model = model)
         self.hbin  = 1
         self.vbin  = 1
+        self.bitdepth = None
+        self.set_bitdepth('8bit')
    
     def get_info(self):
         info = OrderedDict()        
@@ -108,21 +110,33 @@ class USBCamera(USBDevice):
         self._libfli.FLISetExposureTime(self._dev, exptime)
         self._libfli.FLISetFrameType(self._dev, frametype)
 
-    def set_bit_depth(self, bitdepth='8bit'):
+    def set_bitdepth(self, bitdepth='8bit'):
         if bitdepth == '8bit':
             self._libfli.FLISetBitDepth(self._dev, FLI_MODE_8BIT)
         elif bitdepth == '16bit':
             self._libfli.FLISetBitDepth(self._dev, FLI_MODE_16BIT)
         else:
             raise ValueError("'bitdepth' must be either '8bit' or '16bit'")
+        self.bitdepth = bitdepth
 
     def take_photo(self):
         "expose the frame and return as an ndarray object"
-        row_width, img_rows, img_size  = self.get_image_size()        
+        row_width, img_rows, img_size  = self.get_image_size()
+        #use bit depth to determine array data type
+        img_array_dtype = None
+        img_ptr_ctype   = None
+        if self.bitdepth == '8bit':
+            img_array_dtype   = numpy.uint8
+            img_ptr_ctype = c_uint8
+        elif self.bitdepth == '16bit':
+            img_array_dtype = numpy.uint16
+            img_ptr_ctype = c_uint16
+        else:
+            raise FLIError("'bitdepth' must be either '8bit' or '16bit'")   
         #allocate numpy array to store image
-        img_array = numpy.zeros((img_rows, row_width), dtype=numpy.uint16)
+        img_array = numpy.zeros((img_rows, row_width), dtype=img_array_dtype)
         #get pointer to array's data space
-        img_ptr   = img_array.ctypes.data_as(POINTER(c_uint16))
+        img_ptr   = img_array.ctypes.data_as(POINTER(img_ptr_ctype))
         #take exposure and wait for completion
         timeleft = c_long()
         self._libfli.FLIExposeFrame(self._dev)
@@ -133,7 +147,7 @@ class USBCamera(USBDevice):
             time.sleep(timeleft.value/1000.0) #sleep for milliseconds
         #aquire image row by row
         for row in range(img_rows):
-            offset = row*row_width*sizeof(c_uint16)
+            offset = row*row_width*sizeof(img_ptr_ctype)
             self._libfli.FLIGrabRow(self._dev, byref(img_ptr.contents,offset), row_width)
         return img_array
         
@@ -147,7 +161,7 @@ if __name__ == "__main__":
     print "image size:", cam0.get_image_size()
     print "temperature:", cam0.get_temperature()
     cam0.set_image_binning(2,2)
-    cam0.set_bit_depth("16bit")
+    cam0.set_bitdepth("16bit")
     cam0.set_exposure(5)
     img = cam0.take_photo()
     print img
