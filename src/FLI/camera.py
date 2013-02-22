@@ -83,11 +83,11 @@ class USBCamera(USBDevice):
     
     def set_flushes(self, num):
         "set the number of flushes to the CCD before taking exposure"
-        self._libfli.FLISetNFlushes(self._dev, num)
+        self._libfli.FLISetNFlushes(self._dev, c_long(num))
 
     def set_temperature(self, T):
         "set the camera's temperature target in degrees Celcius"
-        self._libfli.FLISetTemperature(self._dev, T)
+        self._libfli.FLISetTemperature(self._dev, c_double(T))
                 
     def get_temperature(self):
         "gets the camera's temperature in degrees Celcius"
