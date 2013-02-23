@@ -126,7 +126,7 @@ class USBCamera(USBDevice):
         img_array_dtype = None
         img_ptr_ctype   = None
         if self.bitdepth == '8bit':
-            img_array_dtype   = numpy.uint8
+            img_array_dtype = numpy.uint8
             img_ptr_ctype = c_uint8
         elif self.bitdepth == '16bit':
             img_array_dtype = numpy.uint16

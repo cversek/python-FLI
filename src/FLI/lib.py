@@ -193,6 +193,9 @@ class FLILibrary:
         if FLILibrary.__dll is None:
             if sys.platform == 'linux2':
                 FLILibrary.__dll = cdll.LoadLibrary("libfli.so")
+            elif sys.platform == 'win32': #FIXME this hasn't been tested yet
+                from ctypes import windll
+                FLILibrary.__dll = windll.LoadLibrary("libfli")
             else:
                 raise RuntimeError("Platform not supported")
         if debug:
