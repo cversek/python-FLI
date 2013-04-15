@@ -70,7 +70,10 @@ class USBCamera(USBDevice):
         return (row_width, img_rows, img_size)
 
     def set_image_area(self, ul_x, ul_y, lr_x, lr_y):
-        self._libfli.FLISetImageArea(self._dev, c_long(ul_x), c_long(ul_y), c_long(lr_x), c_long(lr_y))
+        left, top, right, bottom   = (c_long(ul_x),c_long(ul_y),c_long(lr_x),c_long(lr_y))
+        row_width = (right.value - left.value)/self.hbin
+        img_rows  = (bottom.value - top.value)/self.vbin
+        self._libfli.FLISetImageArea(self._dev, left, top, c_long(left.value + row_width), c_long(top.value + img_rows))
     
     def set_image_binning(self, hbin = 1, vbin = 1):
         left, top, right, bottom   = (c_long(),c_long(),c_long(),c_long())        
