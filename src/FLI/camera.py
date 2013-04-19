@@ -70,6 +70,7 @@ class USBCamera(USBDevice):
         return (row_width, img_rows, img_size)
 
     def set_image_area(self, ul_x, ul_y, lr_x, lr_y):
+        #FIXME does this API call actually do anything?
         self._libfli.FLISetImageArea(self._dev, c_long(ul_x), c_long(ul_y), c_long(lr_x), c_long(lr_y))
     
     def set_image_binning(self, hbin = 1, vbin = 1):
@@ -84,7 +85,12 @@ class USBCamera(USBDevice):
         self.vbin = vbin
     
     def set_flushes(self, num):
-        "set the number of flushes to the CCD before taking exposure"
+        """set the number of flushes to the CCD before taking exposure
+           
+           must have 0 <= num <= 16, else raises ValueError
+        """
+        if not(0 <= num <= 16):
+            raise ValueError("must have 0 <= num <= 16")
         self._libfli.FLISetNFlushes(self._dev, c_long(num))
 
     def set_temperature(self, T):
