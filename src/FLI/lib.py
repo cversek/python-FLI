@@ -71,8 +71,8 @@ FLI_FRAME_TYPE_RBI_FLUSH = FLI_FRAME_TYPE_FLOOD | FLI_FRAME_TYPE_DARK
 
 flibitdepth_t = c_long
 
-FLI_MODE_8BIT  = 0
-FLI_MODE_16BIT = 1
+FLI_MODE_8BIT  = flibitdepth_t(0)
+FLI_MODE_16BIT = flibitdepth_t(1)
 
 #   Type used for shutter operations for an FLI camera device.  Valid
 #   shutter types are \texttt{FLI_SHUTTER_CLOSE},
@@ -184,7 +184,7 @@ FLI_PIXEL_DEFECT_POINT_DARK   = 0x30
 ###############################################################################
 
 _API_FUNCTION_PROTOTYPES = [
-    ("FLIOpen", [flidev_t, c_char_p, flidomain_t]),         #(flidev_t *dev, char *name, flidomain_t domain);
+    ("FLIOpen", [POINTER(flidev_t), c_char_p, flidomain_t]),#(flidev_t *dev, char *name, flidomain_t domain);
     ("FLISetDebugLevel", [c_char_p, flidebug_t]),           #(char *host, flidebug_t level);
     ("FLIClose", [flidev_t]),                               #(flidev_t dev);
     ("FLIGetLibVersion", [c_char_p, c_size_t]),             #(char* ver, size_t len);
@@ -218,7 +218,7 @@ _API_FUNCTION_PROTOTYPES = [
     ("FLIGetExposureStatus", [flidev_t, c_long_p]),         #(flidev_t dev, long *timeleft);
     ("FLISetTemperature", [flidev_t, c_double]),            #(flidev_t dev, double temperature);
     ("FLIGetTemperature", [flidev_t, c_double_p]),          #(flidev_t dev, double *temperature);
-    ("FLIGetCoolerPower", [flidev_t, c_double]),            #(flidev_t dev, double *power);
+    ("FLIGetCoolerPower", [flidev_t, c_double_p]),          #(flidev_t dev, double *power);
     ("FLIGrabRow", [flidev_t, c_void_p, c_size_t]),         #(flidev_t dev, void *buff, size_t width);
     ("FLIExposeFrame", [flidev_t]),                         #(flidev_t dev);
     ("FLIFlushRow", [flidev_t, c_long, c_long]),            #(flidev_t dev, long rows, long repeat);

@@ -26,7 +26,7 @@ import numpy
 from lib import FLILibrary, FLIError, FLIWarning, flidomain_t, flidev_t,\
                 fliframe_t, FLIDOMAIN_USB, FLIDEVICE_CAMERA,\
                 FLI_FRAME_TYPE_NORMAL, FLI_FRAME_TYPE_DARK, FLI_MODE_8BIT,\
-                FLI_MODE_16BIT
+                FLI_MODE_16BIT, FLI_TEMPERATURE_CCD, FLI_TEMPERATURE_BASE
 
 from device import USBDevice
 ###############################################################################
@@ -37,12 +37,12 @@ class USBCamera(USBDevice):
     _libfli = FLILibrary.getDll(debug=DEBUG)
     _domain = flidomain_t(FLIDOMAIN_USB | FLIDEVICE_CAMERA)
     
-    def __init__(self, dev_name, model):
+    def __init__(self, dev_name, model, bitdepth = '16bit'):
         USBDevice.__init__(self, dev_name = dev_name, model = model)
         self.hbin  = 1
         self.vbin  = 1
-        self.bitdepth = None
-        self.set_bitdepth('8bit')
+        self.bitdepth = bitdepth
+        self.set_bitdepth(bitdepth)
    
     def get_info(self):
         info = OrderedDict()        
@@ -105,6 +105,24 @@ class USBCamera(USBDevice):
         T = c_double()         
         self._libfli.FLIGetTemperature(self._dev, byref(T))
         return T.value
+        
+    def read_CCD_temperature(self):
+        "gets the CCD's temperature in degrees Celcius"
+        T = c_double()         
+        self._libfli.FLIReadTemperature(self._dev, FLI_TEMPERATURE_CCD, byref(T))
+        return T.value
+        
+    def read_base_temperature(self):
+        "gets the cooler's hot side in degrees Celcius"
+        T = c_double()         
+        self._libfli.FLIReadTemperature(self._dev, FLI_TEMPERATURE_BASE, byref(T))
+        return T.value
+        
+    def get_cooler_power(self):
+        "gets the cooler's power in watts (undocumented API function)"
+        P = c_double()         
+        self._libfli.FLIGetCoolerPower(self._dev, byref(P))
+        return P.value
 
     def set_exposure(self, exptime, frametype = "normal"):
         """set the exposure time, 'exptime' in milliseconds and the 
@@ -121,9 +139,11 @@ class USBCamera(USBDevice):
 
     def set_bitdepth(self, bitdepth='8bit'):
         if bitdepth == '8bit':
-            self._libfli.FLISetBitDepth(self._dev, FLI_MODE_8BIT)
+            pass #FIXME gives "invalid argument" error from API
+            #self._libfli.FLISetBitDepth(self._dev, FLI_MODE_8BIT)
         elif bitdepth == '16bit':
-            self._libfli.FLISetBitDepth(self._dev, FLI_MODE_16BIT)
+            pass #FIXME gives "invalid argument" error from API
+            #self._libfli.FLISetBitDepth(self._dev, FLI_MODE_16BIT)
         else:
             raise ValueError("'bitdepth' must be either '8bit' or '16bit'")
         self.bitdepth = bitdepth
