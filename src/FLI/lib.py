@@ -10,10 +10,15 @@
 __author__ = 'Craig Wm. Versek'
 __date__ = '2012-07-25'
 
-import sys
-from ctypes import cdll, c_char, c_char_p, c_long, c_ubyte
+import os, sys
+from ctypes import cdll, c_char, c_char_p, c_long, c_ulong, c_ubyte, c_int,\
+                   c_double, c_void_p, c_size_t, POINTER
+c_double_p = POINTER(c_double)
+c_long_p = POINTER(c_long)
+
 ###############################################################################
-# library definitions
+# Library Definitions
+###############################################################################
 
 #   An opaque handle used by library functions to refer to FLI
 #   hardware.
@@ -173,23 +178,189 @@ FLI_PIXEL_DEFECT_COLUMN       = 0x00
 FLI_PIXEL_DEFECT_CLUSTER      = 0x10
 FLI_PIXEL_DEFECT_POINT_BRIGHT = 0x20
 FLI_PIXEL_DEFECT_POINT_DARK   = 0x30
-###############################################################################
-import warnings
 
+###############################################################################
+# API Function Prototypes
+###############################################################################
+
+_API_FUNCTION_PROTOTYPES = [
+    ("FLIOpen", [flidev_t, c_char_p, flidomain_t]),         #(flidev_t *dev, char *name, flidomain_t domain);
+    ("FLISetDebugLevel", [c_char_p, flidebug_t]),           #(char *host, flidebug_t level);
+    ("FLIClose", [flidev_t]),                               #(flidev_t dev);
+    ("FLIGetLibVersion", [c_char_p, c_size_t]),             #(char* ver, size_t len);
+    ("FLIGetModel", [flidev_t, c_char_p, c_size_t]),        #(flidev_t dev, char* model, size_t len);
+    ("FLIGetPixelSize", [flidev_t, c_double_p, c_double_p]),#(flidev_t dev, double *pixel_x, double *pixel_y);
+    ("FLIGetHWRevision", [flidev_t, c_long_p]),             #(flidev_t dev, long *hwrev);
+    ("FLIGetFWRevision", [flidev_t, c_long_p]),             #(flidev_t dev, long *fwrev);
+    ("FLIGetArrayArea", [flidev_t, 
+                         c_long_p, 
+                         c_long_p, 
+                         c_long_p, 
+                         c_long_p]
+    ),                                                      #(flidev_t dev, long* ul_x, long* ul_y,long* lr_x, long* lr_y);
+    ("FLIGetVisibleArea", [flidev_t, 
+                           c_long_p, 
+                           c_long_p, 
+                           c_long_p, 
+                           c_long_p]
+    ),                                                      #(flidev_t dev, long* ul_x, long* ul_y,long* lr_x, long* lr_y);
+    ("FLISetExposureTime", []),#(flidev_t dev, long exptime);
+    ("FLISetImageArea", [flidev_t, 
+                        c_long, 
+                        c_long, 
+                        c_long, 
+                        c_long]
+    ),                                                      #(flidev_t dev, long ul_x, long ul_y, long lr_x, long lr_y);
+    ("FLISetHBin", [flidev_t, c_long]),                     #(flidev_t dev, long hbin);
+    ("FLISetVBin", [flidev_t, c_long]),                     #(flidev_t dev, long vbin);
+    ("FLISetFrameType", [flidev_t, fliframe_t]),            #(flidev_t dev, fliframe_t frametype);
+    ("FLICancelExposure", [flidev_t]),                      #(flidev_t dev);
+    ("FLIGetExposureStatus", [flidev_t, c_long_p]),         #(flidev_t dev, long *timeleft);
+    ("FLISetTemperature", [flidev_t, c_double]),            #(flidev_t dev, double temperature);
+    ("FLIGetTemperature", [flidev_t, c_double_p]),          #(flidev_t dev, double *temperature);
+    ("FLIGetCoolerPower", [flidev_t, c_double]),            #(flidev_t dev, double *power);
+    ("FLIGrabRow", [flidev_t, c_void_p, c_size_t]),         #(flidev_t dev, void *buff, size_t width);
+    ("FLIExposeFrame", [flidev_t]),                         #(flidev_t dev);
+    ("FLIFlushRow", [flidev_t, c_long, c_long]),            #(flidev_t dev, long rows, long repeat);
+    ("FLISetNFlushes", [flidev_t, c_long]),                 #(flidev_t dev, long nflushes);
+    ("FLISetBitDepth", [flidev_t, flibitdepth_t]),          #(flidev_t dev, flibitdepth_t bitdepth);
+    ("FLIReadIOPort", [flidev_t, c_long_p]),                #(flidev_t dev, long *ioportset);
+    ("FLIWriteIOPort", [flidev_t, c_long]),                 #(flidev_t dev, long ioportset);
+    ("FLIConfigureIOPort", [flidev_t, c_long]),             #(flidev_t dev, long ioportset);
+    ("FLILockDevice", [flidev_t]),                          #(flidev_t dev);
+    ("FLIUnlockDevice", [flidev_t]),                        #(flidev_t dev);
+    ("FLIControlShutter", [flidev_t, flishutter_t]),        #(flidev_t dev, flishutter_t shutter);
+    ("FLIControlBackgroundFlush", [flidev_t, flibgflush_t]),#(flidev_t dev, flibgflush_t bgflush);
+    ("FLISetDAC", [flidev_t, c_ulong]),                     #(flidev_t dev, unsigned long dacset);
+    ("FLIList", [flidomain_t,
+                 POINTER(POINTER(c_char_p))]
+    ),                                                      #(flidomain_t domain, char ***names);
+    ("FLIFreeList", [POINTER(c_char_p)]),                   #(char **names);
+    #Filter Wheels
+    ("FLIGetFilterName", [flidev_t,
+                          c_long,
+                          c_char_p,
+                          c_size_t]
+    )                             ,                         #(flidev_t dev, long filter, char *name, size_t len);
+    ("FLISetActiveWheel", [flidev_t, c_long]),              #(flidev_t dev, long wheel);
+    ("FLIGetActiveWheel", [flidev_t, c_long_p]),            #(flidev_t dev, long *wheel);
+    ("FLISetFilterPos", [flidev_t, c_long]),                #(flidev_t dev, long filter);
+    ("FLIGetFilterPos", [flidev_t, c_long_p]),              #(flidev_t dev, long *filter);
+    ("FLIGetFilterCount", [flidev_t, c_long_p]),            #(flidev_t dev, long *filter);
+    #Focusers
+    ("FLIStepMotor", [flidev_t, c_long]),                   #(flidev_t dev, long steps);
+    ("FLIStepMotorAsync", [flidev_t, c_long]),              #(flidev_t dev, long steps);
+    ("FLIGetStepperPosition", [flidev_t, c_long_p]),        #(flidev_t dev, long *position);
+    ("FLIGetStepsRemaining", [flidev_t, c_long_p]),         #(flidev_t dev, long *steps);
+    ("FLIHomeFocuser", [flidev_t, c_long]),                 #(flidev_t dev);
+    ("FLICreateList", [flidomain_t]),                       #(flidomain_t domain);
+    ("FLIDeleteList", []),                                  #(void);
+    ("FLIListFirst", [POINTER(flidomain_t), 
+                      c_char_p,
+                      c_size_t,
+                      c_char_p,
+                      c_size_t]
+    ),                                                      #(flidomain_t *domain, char *filename,size_t fnlen, char *name, size_t namelen);
+    ("FLIListNext", [POINTER(flidomain_t), 
+                      c_char_p,
+                      c_size_t,
+                      c_char_p,
+                      c_size_t]
+    ),                                                      #(flidomain_t *domain, char *filename,size_t fnlen, char *name, size_t namelen);
+    ("FLIReadTemperature", [flidev_t,
+                            flichannel_t, 
+                            c_double_p]
+    ),                                                      #(flidev_t dev,flichannel_t channel, double *temperature);
+    ("FLIGetFocuserExtent", [flidev_t, c_long_p]),          #(flidev_t dev, long *extent);
+    ("FLIUsbBulkIO", [flidev_t, c_int, c_void_p, c_long_p]),#(flidev_t dev, int ep, void *buf, long *len);
+    ("FLIGetDeviceStatus", [flidev_t, c_long_p]),           #(flidev_t dev, long *status);
+    ("FLIGetCameraModeString", [flidev_t,
+                                flimode_t,
+                                c_char_p,
+                                c_size_t]
+    ),                                                      #(flidev_t dev, flimode_t mode_index, char *mode_string, size_t siz);
+    ("FLIGetCameraMode", [flidev_t, POINTER(flimode_t)]),   #(flidev_t dev, flimode_t *mode_index);
+    ("FLISetCameraMode", [flidev_t, flimode_t]),            #(flidev_t dev, flimode_t mode_index);
+    ("FLIHomeDevice", [flidev_t]),                          #(flidev_t dev);
+    ("FLIGrabFrame", [flidev_t, 
+                      c_void_p, 
+                      c_size_t, 
+                      POINTER(c_size_t)]),                  #(flidev_t dev, void* buff, size_t buffsize, size_t* bytesgrabbed);
+    ("FLISetTDI", [flidev_t, flitdirate_t, flitdiflags_t]), #(flidev_t dev, flitdirate_t tdi_rate, flitdiflags_t flags);
+    ("FLIGrabVideoFrame", [flidev_t, c_void_p, c_size_t]),  #(flidev_t dev, void *buff, size_t size);
+    ("FLIStopVideoMode", [flidev_t]),                       #(flidev_t dev);
+    ("FLIStartVideoMode", [flidev_t]),                      #(flidev_t dev);
+    ("FLIGetSerialString", [flidev_t, c_char_p, c_size_t]), #(flidev_t dev, char* serial, size_t len);
+    ("FLIEndExposure", [flidev_t]),                         #(flidev_t dev);
+    ("FLITriggerExposure", [flidev_t]),                     #(flidev_t dev);
+    ("FLISetFanSpeed", [flidev_t, c_long]),                 #(flidev_t dev, long fan_speed);
+    ("FLISetVerticalTableEntry", [flidev_t,
+                                  c_long,
+                                  c_long,
+                                  c_long,
+                                  c_long]
+    ),                                                      #(flidev_t dev, long index, long height, long bin, long mode);
+    ("FLIGetVerticalTableEntry", [flidev_t,
+                                  c_long, 
+                                  c_long_p,
+                                  c_long_p,
+                                  c_long_p]
+    ),                                                      #(flidev_t dev, long index, long *height, long *bin, long *mode);
+    ("FLIGetReadoutDimensions", [flidev_t,
+                                 c_long_p,
+                                 c_long_p,
+                                 c_long_p,
+                                 c_long_p,
+                                 c_long_p,
+                                 c_long_p]
+    ),                                                      #(flidev_t dev, long *width, long *hoffset, long *hbin, long *height, long *voffset, long *vbin);
+    ("FLIEnableVerticalTable", [flidev_t,
+                                c_long,
+                                c_long,
+                                c_long,]
+    ),                                                      #(flidev_t dev, long width, long offset, long flags);
+    ("FLIReadUserEEPROM", [flidev_t,
+                           c_long,
+                           c_long,
+                           c_long,
+                           c_void_p]
+    ),                                                      #(flidev_t dev, long loc, long address, long length, void *rbuf);
+    ("FLIWriteUserEEPROM", [flidev_t,
+                            c_long,
+                            c_long,
+                            c_long,
+                            c_void_p]),                     #(flidev_t dev, long loc, long address, long length, void *wbuf);
+]
+###############################################################################
+# Error Handling
+###############################################################################
 class FLIError(Exception):
     pass
 
 class FLIWarning(Warning):
     pass
 
+def chk_err(err):
+    """wraps a libfli C function call with error checking code"""
+    if err < 0:
+        msg = os.strerror(abs(err)) #err is always negative
+        raise FLIError(msg)
+    if err > 0:
+        msg = os.strerror(err)      #FIXME, what if err is positive?
+        raise FLIWarning(msg)
+    return err
 
+###############################################################################
+# Library Loader
 ###############################################################################
 LIBVERSIZ = 1024
 
 class FLILibrary:
     __dll = None
     @staticmethod
-    def getDll(debug = False):
+    def getDll(debug = False,
+               wrap_error_codes = True,
+              ):
         if FLILibrary.__dll is None:
             if sys.platform == 'linux2':
                 FLILibrary.__dll = cdll.LoadLibrary("libfli.so")
@@ -197,10 +368,22 @@ class FLILibrary:
                 from ctypes import windll
                 FLILibrary.__dll = windll.LoadLibrary("libfli")
             else:
+                #try loading the library anyway   
                 raise RuntimeError("Platform not supported")
+            #wrap the api functions
+            for api_func_name, argtypes in _API_FUNCTION_PROTOTYPES:
+                api_func = FLILibrary.__dll.__getattr__(api_func_name)
+                api_func.argtypes = argtypes
+                if wrap_error_codes:
+                    api_func.restype = chk_err
+
+        #set debug level
         if debug:
             FLILibrary.__dll.FLISetDebugLevel(None, FLIDEBUG_ALL)
+        
+            
         return FLILibrary.__dll
+
     @staticmethod
     def getVersion():
         libfli = FLILibrary.getDll()
