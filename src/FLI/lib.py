@@ -252,7 +252,7 @@ _API_FUNCTION_PROTOTYPES = [
     ("FLIStepMotorAsync", [flidev_t, c_long]),              #(flidev_t dev, long steps);
     ("FLIGetStepperPosition", [flidev_t, c_long_p]),        #(flidev_t dev, long *position);
     ("FLIGetStepsRemaining", [flidev_t, c_long_p]),         #(flidev_t dev, long *steps);
-    ("FLIHomeFocuser", [flidev_t, c_long]),                 #(flidev_t dev);
+    ("FLIHomeFocuser", [flidev_t]),                         #(flidev_t dev);
     ("FLICreateList", [flidomain_t]),                       #(flidomain_t domain);
     ("FLIDeleteList", []),                                  #(void);
     ("FLIListFirst", [POINTER(flidomain_t), 
