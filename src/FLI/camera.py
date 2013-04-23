@@ -25,8 +25,9 @@ import numpy
 
 from lib import FLILibrary, FLIError, FLIWarning, flidomain_t, flidev_t,\
                 fliframe_t, FLIDOMAIN_USB, FLIDEVICE_CAMERA,\
-                FLI_FRAME_TYPE_NORMAL, FLI_FRAME_TYPE_DARK, FLI_MODE_8BIT,\
-                FLI_MODE_16BIT, FLI_TEMPERATURE_CCD, FLI_TEMPERATURE_BASE
+                FLI_FRAME_TYPE_NORMAL, FLI_FRAME_TYPE_DARK,\
+                FLI_FRAME_TYPE_RBI_FLUSH, FLI_MODE_8BIT, FLI_MODE_16BIT,\
+                FLI_TEMPERATURE_CCD, FLI_TEMPERATURE_BASE
 
 from device import USBDevice
 ###############################################################################
@@ -48,16 +49,17 @@ class USBCamera(USBDevice):
         info = OrderedDict()        
         tmp1, tmp2, tmp3, tmp4   = (c_long(),c_long(),c_long(),c_long())
         d1, d2                   = (c_double(),c_double())        
+        info['serial_number'] = self.get_serial_number()
         self._libfli.FLIGetHWRevision(self._dev, byref(tmp1))
-        info['Hardware Rev'] = tmp1.value
+        info['hardware_rev'] = tmp1.value
         self._libfli.FLIGetFWRevision(self._dev, byref(tmp1))
-        info['Firmware Rev'] = tmp1.value
+        info['firmware_rev'] = tmp1.value
         self._libfli.FLIGetPixelSize(self._dev, byref(d1), byref(d2))
-        info['Pixel Size'] = (d1.value,d2.value)
+        info['pixel_size'] = (d1.value,d2.value)
         self._libfli.FLIGetArrayArea(self._dev, byref(tmp1), byref(tmp2), byref(tmp3), byref(tmp4))
-        info['Array Area'] = (tmp1.value,tmp2.value,tmp3.value,tmp4.value)
+        info['array_area'] = (tmp1.value,tmp2.value,tmp3.value,tmp4.value)
         self._libfli.FLIGetVisibleArea(self._dev, byref(tmp1), byref(tmp2), byref(tmp3), byref(tmp4))
-        info['Visible Area'] = (tmp1.value,tmp2.value,tmp3.value,tmp4.value)        
+        info['visible_area'] = (tmp1.value,tmp2.value,tmp3.value,tmp4.value)        
         return info
 
     def get_image_size(self):
@@ -125,15 +127,23 @@ class USBCamera(USBDevice):
         return P.value
 
     def set_exposure(self, exptime, frametype = "normal"):
-        """set the exposure time, 'exptime' in milliseconds and the 
-           'frametype' as 'normal' or 'dark'"""
+        """setup the exposure type:
+               exptime   - exposure time in milliseconds 
+               frametype -  'normal'     - open shutter exposure
+                            'dark'       - exposure with shutter closed
+                            'rbi_flush'  - flood CCD with internal light, with shutter closed
+        """
         exptime = c_long(exptime)        
         if frametype == "normal":
             frametype = fliframe_t(FLI_FRAME_TYPE_NORMAL)
         elif frametype == "dark":
             frametype = fliframe_t(FLI_FRAME_TYPE_DARK)
+        elif frametype == "rbi_flush":
+            #FIXME note: FLI_FRAME_TYPE_RBI_FLUSH = FLI_FRAME_TYPE_FLOOD | FLI_FRAME_TYPE_DARK
+            # is this always the correct mode?
+            frametype = fliframe_t(FLI_FRAME_TYPE_RBI_FLUSH)
         else:
-            raise ValueError("'frametype' must be either 'normal' or 'dark'")
+            raise ValueError("'frametype' must be either 'normal','dark' or 'rbi_flush'")
         self._libfli.FLISetExposureTime(self._dev, exptime)
         self._libfli.FLISetFrameType(self._dev, frametype)
 
