@@ -159,7 +159,37 @@ class USBCamera(USBDevice):
         self.bitdepth = bitdepth
 
     def take_photo(self):
-        "expose the frame and return as an ndarray object"
+        """ Expose the frame, wait for completion, and fetch the image data.
+        """
+        self.start_exposure()
+        #wait for completion
+        while True:
+            timeleft = self.get_timeleft()
+            if timeleft == 0:
+                break
+            time.sleep(timeleft/1000.0) #sleep for milliseconds
+        #grab the image
+        return self.fetch_image()
+       
+    def start_exposure(self):
+        """ Begin the exposure and return immediately. 
+            Use the method  'get_timeleft' to check the exposure progress 
+            until it returns 0, then use method 'fetch_image' to fetch the image
+            data as a numpy array.
+        """
+        self._libfli.FLIExposeFrame(self._dev)
+        
+    def get_timeleft(self):
+        """ Returns the time left on the exposure in milliseconds.
+        """
+        timeleft = c_long()
+        self._libfli.FLIGetExposureStatus(self._dev,byref(timeleft))
+        return timeleft.value
+    
+    def fetch_image(self):
+        """ Fetch the image data for the last exposure.
+            Returns a numpy.ndarray object.
+        """
         row_width, img_rows, img_size  = self.get_image_size()
         #use bit depth to determine array data type
         img_array_dtype = None
@@ -171,20 +201,12 @@ class USBCamera(USBDevice):
             img_array_dtype = numpy.uint16
             img_ptr_ctype = c_uint16
         else:
-            raise FLIError("'bitdepth' must be either '8bit' or '16bit'")   
+            raise FLIError("'bitdepth' must be either '8bit' or '16bit'")
         #allocate numpy array to store image
         img_array = numpy.zeros((img_rows, row_width), dtype=img_array_dtype)
         #get pointer to array's data space
         img_ptr   = img_array.ctypes.data_as(POINTER(img_ptr_ctype))
-        #take exposure and wait for completion
-        timeleft = c_long()
-        self._libfli.FLIExposeFrame(self._dev)
-        while True:
-            self._libfli.FLIGetExposureStatus(self._dev,byref(timeleft))
-            if timeleft.value == 0:
-                break            
-            time.sleep(timeleft.value/1000.0) #sleep for milliseconds
-        #aquire image row by row
+        #grab image buff row by row
         for row in range(img_rows):
             offset = row*row_width*sizeof(img_ptr_ctype)
             self._libfli.FLIGrabRow(self._dev, byref(img_ptr.contents,offset), row_width)
