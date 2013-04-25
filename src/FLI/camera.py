@@ -164,7 +164,7 @@ class USBCamera(USBDevice):
         self.start_exposure()
         #wait for completion
         while True:
-            timeleft = self.get_timeleft()
+            timeleft = self.get_exposure_timeleft()
             if timeleft == 0:
                 break
             time.sleep(timeleft/1000.0) #sleep for milliseconds
@@ -172,14 +172,14 @@ class USBCamera(USBDevice):
         return self.fetch_image()
        
     def start_exposure(self):
-        """ Begin the exposure and return immediately. 
+        """ Begin the exposure and return immediately.
             Use the method  'get_timeleft' to check the exposure progress 
             until it returns 0, then use method 'fetch_image' to fetch the image
             data as a numpy array.
         """
         self._libfli.FLIExposeFrame(self._dev)
         
-    def get_timeleft(self):
+    def get_exposure_timeleft(self):
         """ Returns the time left on the exposure in milliseconds.
         """
         timeleft = c_long()
