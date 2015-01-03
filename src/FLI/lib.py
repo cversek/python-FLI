@@ -185,13 +185,10 @@ FLI_PIXEL_DEFECT_POINT_DARK   = 0x30
 
 _API_FUNCTION_PROTOTYPES = [
     ("FLIOpen", [POINTER(flidev_t), c_char_p, flidomain_t]),#(flidev_t *dev, char *name, flidomain_t domain);
-    ("FLISetDebugLevel", [c_char_p, flidebug_t]),           #(char *host, flidebug_t level);
     ("FLIClose", [flidev_t]),                               #(flidev_t dev);
+    ("FLISetDebugLevel", [c_char_p, flidebug_t]),           #(char *host, flidebug_t level);
     ("FLIGetLibVersion", [c_char_p, c_size_t]),             #(char* ver, size_t len);
     ("FLIGetModel", [flidev_t, c_char_p, c_size_t]),        #(flidev_t dev, char* model, size_t len);
-    ("FLIGetPixelSize", [flidev_t, c_double_p, c_double_p]),#(flidev_t dev, double *pixel_x, double *pixel_y);
-    ("FLIGetHWRevision", [flidev_t, c_long_p]),             #(flidev_t dev, long *hwrev);
-    ("FLIGetFWRevision", [flidev_t, c_long_p]),             #(flidev_t dev, long *fwrev);
     ("FLIGetArrayArea", [flidev_t, 
                          c_long_p, 
                          c_long_p, 
@@ -204,7 +201,19 @@ _API_FUNCTION_PROTOTYPES = [
                            c_long_p, 
                            c_long_p]
     ),                                                      #(flidev_t dev, long* ul_x, long* ul_y,long* lr_x, long* lr_y);
+    ("FLIExposeFrame", [flidev_t]),                         #(flidev_t dev);
+    ("FLICancelExposure", [flidev_t]),                      #(flidev_t dev);
+    ("FLIGetExposureStatus", [flidev_t, c_long_p]),         #(flidev_t dev, long *timeleft);
+    ("FLISetTemperature", [flidev_t, c_double]),            #(flidev_t dev, double temperature);
+    ("FLIGetTemperature", [flidev_t, c_double_p]),          #(flidev_t dev, double *temperature);
+    ("FLIGrabRow", [flidev_t, c_void_p, c_size_t]),         #(flidev_t dev, void *buff, size_t width);
+    ("FLIGrabFrame", [flidev_t, 
+                      c_void_p, 
+                      c_size_t, 
+                      POINTER(c_size_t)]),                  #(flidev_t dev, void* buff, size_t buffsize, size_t* bytesgrabbed);
+    ("FLIFlushRow", [flidev_t, c_long, c_long]),            #(flidev_t dev, long rows, long repeat);
     ("FLISetExposureTime", []),#(flidev_t dev, long exptime);
+    ("FLISetFrameType", [flidev_t, fliframe_t]),            #(flidev_t dev, fliframe_t frametype);
     ("FLISetImageArea", [flidev_t, 
                         c_long, 
                         c_long, 
@@ -213,45 +222,26 @@ _API_FUNCTION_PROTOTYPES = [
     ),                                                      #(flidev_t dev, long ul_x, long ul_y, long lr_x, long lr_y);
     ("FLISetHBin", [flidev_t, c_long]),                     #(flidev_t dev, long hbin);
     ("FLISetVBin", [flidev_t, c_long]),                     #(flidev_t dev, long vbin);
-    ("FLISetFrameType", [flidev_t, fliframe_t]),            #(flidev_t dev, fliframe_t frametype);
-    ("FLICancelExposure", [flidev_t]),                      #(flidev_t dev);
-    ("FLIGetExposureStatus", [flidev_t, c_long_p]),         #(flidev_t dev, long *timeleft);
-    ("FLISetTemperature", [flidev_t, c_double]),            #(flidev_t dev, double temperature);
-    ("FLIGetTemperature", [flidev_t, c_double_p]),          #(flidev_t dev, double *temperature);
-    ("FLIGetCoolerPower", [flidev_t, c_double_p]),          #(flidev_t dev, double *power);
-    ("FLIGrabRow", [flidev_t, c_void_p, c_size_t]),         #(flidev_t dev, void *buff, size_t width);
-    ("FLIExposeFrame", [flidev_t]),                         #(flidev_t dev);
-    ("FLIFlushRow", [flidev_t, c_long, c_long]),            #(flidev_t dev, long rows, long repeat);
     ("FLISetNFlushes", [flidev_t, c_long]),                 #(flidev_t dev, long nflushes);
     ("FLISetBitDepth", [flidev_t, flibitdepth_t]),          #(flidev_t dev, flibitdepth_t bitdepth);
     ("FLIReadIOPort", [flidev_t, c_long_p]),                #(flidev_t dev, long *ioportset);
     ("FLIWriteIOPort", [flidev_t, c_long]),                 #(flidev_t dev, long ioportset);
     ("FLIConfigureIOPort", [flidev_t, c_long]),             #(flidev_t dev, long ioportset);
+    ("FLIControlShutter", [flidev_t, flishutter_t]),        #(flidev_t dev, flishutter_t shutter);
     ("FLILockDevice", [flidev_t]),                          #(flidev_t dev);
     ("FLIUnlockDevice", [flidev_t]),                        #(flidev_t dev);
-    ("FLIControlShutter", [flidev_t, flishutter_t]),        #(flidev_t dev, flishutter_t shutter);
-    ("FLIControlBackgroundFlush", [flidev_t, flibgflush_t]),#(flidev_t dev, flibgflush_t bgflush);
-    ("FLISetDAC", [flidev_t, c_ulong]),                     #(flidev_t dev, unsigned long dacset);
     ("FLIList", [flidomain_t,
                  POINTER(POINTER(c_char_p))]
     ),                                                      #(flidomain_t domain, char ***names);
     ("FLIFreeList", [POINTER(c_char_p)]),                   #(char **names);
-    #Filter Wheels
-    ("FLIGetFilterName", [flidev_t,
-                          c_long,
-                          c_char_p,
-                          c_size_t]
-    )                             ,                         #(flidev_t dev, long filter, char *name, size_t len);
-    ("FLISetActiveWheel", [flidev_t, c_long]),              #(flidev_t dev, long wheel);
-    ("FLIGetActiveWheel", [flidev_t, c_long_p]),            #(flidev_t dev, long *wheel);
     ("FLISetFilterPos", [flidev_t, c_long]),                #(flidev_t dev, long filter);
     ("FLIGetFilterPos", [flidev_t, c_long_p]),              #(flidev_t dev, long *filter);
     ("FLIGetFilterCount", [flidev_t, c_long_p]),            #(flidev_t dev, long *filter);
-    #Focusers
     ("FLIStepMotor", [flidev_t, c_long]),                   #(flidev_t dev, long steps);
-    ("FLIStepMotorAsync", [flidev_t, c_long]),              #(flidev_t dev, long steps);
     ("FLIGetStepperPosition", [flidev_t, c_long_p]),        #(flidev_t dev, long *position);
-    ("FLIGetStepsRemaining", [flidev_t, c_long_p]),         #(flidev_t dev, long *steps);
+    ("FLIGetHWRevision", [flidev_t, c_long_p]),             #(flidev_t dev, long *hwrev);
+    ("FLIGetPixelSize", [flidev_t, c_double_p, c_double_p]),#(flidev_t dev, double *pixel_x, double *pixel_y);
+    ("FLIGetFWRevision", [flidev_t, c_long_p]),             #(flidev_t dev, long *fwrev);
     ("FLIHomeFocuser", [flidev_t]),                         #(flidev_t dev);
     ("FLICreateList", [flidomain_t]),                       #(flidomain_t domain);
     ("FLIDeleteList", []),                                  #(void);
@@ -267,12 +257,17 @@ _API_FUNCTION_PROTOTYPES = [
                       c_char_p,
                       c_size_t]
     ),                                                      #(flidomain_t *domain, char *filename,size_t fnlen, char *name, size_t namelen);
+    ("FLIControlBackgroundFlush", [flidev_t, flibgflush_t]),#(flidev_t dev, flibgflush_t bgflush);
+    ("FLISetDAC", [flidev_t, c_ulong]),                     #(flidev_t dev, unsigned long dacset);
+    ("FLIGetStepsRemaining", [flidev_t, c_long_p]),         #(flidev_t dev, long *steps);
+    ("FLIStepMotorAsync", [flidev_t, c_long]),              #(flidev_t dev, long steps);
     ("FLIReadTemperature", [flidev_t,
                             flichannel_t, 
                             c_double_p]
     ),                                                      #(flidev_t dev,flichannel_t channel, double *temperature);
     ("FLIGetFocuserExtent", [flidev_t, c_long_p]),          #(flidev_t dev, long *extent);
     ("FLIUsbBulkIO", [flidev_t, c_int, c_void_p, c_long_p]),#(flidev_t dev, int ep, void *buf, long *len);
+    ("FLIGetCoolerPower", [flidev_t, c_double_p]),          #(flidev_t dev, double *power);
     ("FLIGetDeviceStatus", [flidev_t, c_long_p]),           #(flidev_t dev, long *status);
     ("FLIGetCameraModeString", [flidev_t,
                                 flimode_t,
@@ -282,11 +277,6 @@ _API_FUNCTION_PROTOTYPES = [
     ("FLIGetCameraMode", [flidev_t, POINTER(flimode_t)]),   #(flidev_t dev, flimode_t *mode_index);
     ("FLISetCameraMode", [flidev_t, flimode_t]),            #(flidev_t dev, flimode_t mode_index);
     ("FLIHomeDevice", [flidev_t]),                          #(flidev_t dev);
-    ("FLIGrabFrame", [flidev_t, 
-                      c_void_p, 
-                      c_size_t, 
-                      POINTER(c_size_t)]),                  #(flidev_t dev, void* buff, size_t buffsize, size_t* bytesgrabbed);
-    ("FLISetTDI", [flidev_t, flitdirate_t, flitdiflags_t]), #(flidev_t dev, flitdirate_t tdi_rate, flitdiflags_t flags);
     ("FLIGrabVideoFrame", [flidev_t, c_void_p, c_size_t]),  #(flidev_t dev, void *buff, size_t size);
     ("FLIStopVideoMode", [flidev_t]),                       #(flidev_t dev);
     ("FLIStartVideoMode", [flidev_t]),                      #(flidev_t dev);
@@ -330,6 +320,14 @@ _API_FUNCTION_PROTOTYPES = [
                             c_long,
                             c_long,
                             c_void_p]),                     #(flidev_t dev, long loc, long address, long length, void *wbuf);
+    ("FLISetActiveWheel", [flidev_t, c_long]),              #(flidev_t dev, long wheel);
+    ("FLIGetFilterName", [flidev_t,
+                          c_long,
+                          c_char_p,
+                          c_size_t]
+    ),                                                      #(flidev_t dev, long filter, char *name, size_t len);
+    ("FLISetTDI", [flidev_t, flitdirate_t, flitdiflags_t]), #(flidev_t dev, flitdirate_t tdi_rate, flitdiflags_t flags);
+    #FIXME ("FLIGetActiveWheel", [flidev_t, c_long_p]),            #(flidev_t dev, long *wheel);
 ]
 ###############################################################################
 # Error Handling
