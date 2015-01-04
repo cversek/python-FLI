@@ -11,24 +11,27 @@ notes: Install with "python setup.py install".
 """
 import platform, os, shutil
 
+
+    
+PACKAGE_SOURCE_DIR = 'src'
+PACKAGE_NAME       = 'FLI'
+PACKAGE_PATH  = os.path.abspath(os.sep.join((PACKAGE_SOURCE_DIR,PACKAGE_NAME)))
+
 PACKAGE_METADATA = {
-    'name'         : 'FLI',
+    'name'         : PACKAGE_NAME,
     'version'      : 'dev',
     'author'       : "Craig Versek",
     'author_email' : "cwv@yesinc.com",
 }
-    
-PACKAGE_SOURCE_DIR = 'src'
-MAIN_PACKAGE_DIR   = 'FLI'
-MAIN_PACKAGE_PATH  = os.path.abspath(os.sep.join((PACKAGE_SOURCE_DIR,MAIN_PACKAGE_DIR)))
  
 if __name__ == "__main__":
-    from setuptools import setup, find_packages    
-    setup(package_dir      = {'':PACKAGE_SOURCE_DIR},
+    from setuptools import setup, find_packages
+    setup(
           packages         = find_packages(PACKAGE_SOURCE_DIR),
+          package_dir      = {'':PACKAGE_SOURCE_DIR},
           
-          #non-code files
-          package_data     =   {'': ['*.so']},
+          #non-source files
+          package_data     =   {'': ['*.so', '*.dll']},
 
           **PACKAGE_METADATA
          )
