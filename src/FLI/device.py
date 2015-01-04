@@ -43,23 +43,23 @@ class USBDevice(object):
         self._libfli.FLIGetSerialString(self._dev,serial,c_size_t(BUFFER_SIZE))
         return serial.value
     
-    @classmethod    
+    @classmethod
     def find_devices(cls):
         """locates all FLI USB devices in the current domain and returns a 
            list of USBDevice objects"""
 
-        tmplist = POINTER(c_char_p)()      
+        tmplist = POINTER(c_char_p)()
         cls._libfli.FLIList(cls._domain, byref(tmplist))      #allocates memory
-        devs = []        
-        i = 0        
+        devs = []
+        i = 0
         while not tmplist[i] is None:
             dev_name, model = tmplist[i].split(";")
-            devs.append(cls(dev_name=dev_name,model=model))   #create device objects         
+            devs.append(cls(dev_name=dev_name,model=model))   #create device objects
             i += 1
-        cls._libfli.FLIFreeList(tmplist)                      #frees memory   
+        cls._libfli.FLIFreeList(tmplist)                      #frees memory
         return devs
 
-    @classmethod    
+    @classmethod
     def locate_device(cls, serial_number):
         """locates the FLI USB devices in the current domain that matches the
            'serial_number' string
@@ -69,7 +69,7 @@ class USBDevice(object):
            raises FLIError if more than one device matching the serial_number 
                   is found, i.e., there is a conflict
         """
-        dev_match = None        
+        dev_match = None
         devs = cls.find_devices()
         for dev in devs:
             dev_sn = dev.get_serial_number()
@@ -78,7 +78,7 @@ class USBDevice(object):
                     dev_match = dev
                 else:                         #conflict
                     msg = "Device Conflict: there are more than one devices matching the serial_number '%s'" % serial_number
-                    raise FLIError(msg)        
+                    raise FLIError(msg)
         return dev_match
 ###############################################################################
 #  TEST CODE
