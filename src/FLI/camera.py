@@ -148,14 +148,15 @@ class USBCamera(USBDevice):
         self._libfli.FLISetFrameType(self._dev, frametype)
 
     def set_bitdepth(self, bitdepth='8bit'):
+        #FIXME untested
+        bitdepth_var = flibitdepth_t()
         if bitdepth == '8bit':
-            pass #FIXME gives "invalid argument" error from API
-            #self._libfli.FLISetBitDepth(self._dev, FLI_MODE_8BIT)
+            bitdepth_var.value = FLI_MODE_8BIT
         elif bitdepth == '16bit':
-            pass #FIXME gives "invalid argument" error from API
-            #self._libfli.FLISetBitDepth(self._dev, FLI_MODE_16BIT)
+            bitdepth_var.value = FLI_MODE_16BIT
         else:
             raise ValueError("'bitdepth' must be either '8bit' or '16bit'")
+        self._libfli.FLISetBitDepth(self._dev, bitdepth_var)
         self.bitdepth = bitdepth
 
     def take_photo(self):
