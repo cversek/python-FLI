@@ -212,7 +212,7 @@ _API_FUNCTION_PROTOTYPES = [
                       c_size_t, 
                       POINTER(c_size_t)]),                  #(flidev_t dev, void* buff, size_t buffsize, size_t* bytesgrabbed);
     ("FLIFlushRow", [flidev_t, c_long, c_long]),            #(flidev_t dev, long rows, long repeat);
-    ("FLISetExposureTime", []),#(flidev_t dev, long exptime);
+    ("FLISetExposureTime", [flidev_t, c_long]),             #(flidev_t dev, long exptime);
     ("FLISetFrameType", [flidev_t, fliframe_t]),            #(flidev_t dev, fliframe_t frametype);
     ("FLISetImageArea", [flidev_t, 
                         c_long, 
