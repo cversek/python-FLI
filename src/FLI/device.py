@@ -51,12 +51,14 @@ class USBDevice(object):
         tmplist = POINTER(c_char_p)()
         cls._libfli.FLIList(cls._domain, byref(tmplist))      #allocates memory
         devs = []
-        i = 0
-        while not tmplist[i] is None:
-            dev_name, model = tmplist[i].split(";")
-            devs.append(cls(dev_name=dev_name,model=model))   #create device objects
-            i += 1
-        cls._libfli.FLIFreeList(tmplist)                      #frees memory
+        #process list only if it is not NULL
+        if tmplist:
+            while tmplist[i]: #process members only if they are not NULL
+                dev_name, model = tmplist[i].split(";")
+                devs.append(cls(dev_name=dev_name,model=model))   #create device objects
+                i += 1
+            cls._libfli.FLIFreeList(tmplist)                      #frees memory
+        #finished processing list
         return devs
 
     @classmethod
