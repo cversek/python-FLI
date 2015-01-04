@@ -10,7 +10,7 @@
 __author__ = 'Craig Wm. Versek'
 __date__ = '2012-07-25'
 
-import os, sys
+import os, sys, warnings
 from ctypes import cdll, c_char, c_char_p, c_long, c_ulong, c_ubyte, c_int,\
                    c_double, c_void_p, c_size_t, POINTER
 c_double_p = POINTER(c_double)
@@ -361,37 +361,45 @@ class FLILibrary:
               ):
         if FLILibrary.__dll is None:
             if sys.platform.startswith('linux'):
-                FLILibrary.__dll = cdll.LoadLibrary("libfli.so")
+                try: #first try to load library from package directory
+                    libpath = os.path.sep.join((os.path.dirname(__file__),"libfli.so"))
+                    FLILibrary.__dll = cdll.LoadLibrary(libpath)
+                except OSError:  #otherwise look in system locations
+                    FLILibrary.__dll = cdll.LoadLibrary("libfli.so")
             elif sys.platform.startswith('win'):
                 from ctypes import windll
                 import platform
                 bits, linkage = platform.architecture()
                 if bits == '32bit':
-                    FLILibrary.__dll = windll.LoadLibrary("libfli")
+                    libpath = os.path.sep.join((os.path.dirname(__file__),"libfli.dll"))
+                    FLILibrary.__dll = windll.LoadLibrary(libpath)
                 elif bits == '64bit':
-                    FLILibrary.__dll = windll.LoadLibrary("libfli64")
+                    libpath = os.path.sep.join((os.path.dirname(__file__),"libfli64.dll"))
+                    FLILibrary.__dll = windll.LoadLibrary(libpath)
             else:
-                import warnings
                 msg = "platform '%s' not recognized" % (sys.platform,)
                 warnings.warn(Warning(msg))
                 #try loading the library anyway
                 libnames = ['libfli.dll','libfli64.dll','libfli.so','libfli64.so']
                 for libname in libnames:
                     try:
-                        msg = "trying to load library named '%s'" % (libname,)
+                        msg = "trying to load library at path '%s'" % (libname,)
                         FLILibrary.__dll = cdll.LoadLibrary(libname)
                         break #load successful, stop trying
-                    except OSError, exc:
-                        msg = "failed to load library with error: %s" % (exc,)
+                    except OSError, err:
+                        msg = "failed to load library with error: %s" % (err,)
                         warnings.warn(Warning(msg))
                 else:
                     raise RuntimeError("'libfli' could not be loaded, check warnings")
             #wrap the api functions
             for api_func_name, argtypes in _API_FUNCTION_PROTOTYPES:
-                api_func = FLILibrary.__dll.__getattr__(api_func_name)
-                api_func.argtypes = argtypes
-                if wrap_error_codes:
-                    api_func.restype = chk_err
+                try:
+                    api_func = FLILibrary.__dll.__getattr__(api_func_name)
+                    api_func.argtypes = argtypes
+                    if wrap_error_codes:
+                        api_func.restype = chk_err
+                except AttributeError, err:
+                    warnings.warn(Warning(err))
 
         #set debug level
         if debug:
@@ -414,5 +422,3 @@ class FLILibrary:
 if __name__ == "__main__":
     import sys
     libfli = FLILibrary.getDll(debug=True)
-    
-    
