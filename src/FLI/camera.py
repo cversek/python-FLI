@@ -10,7 +10,7 @@
 __author__ = 'Craig Wm. Versek'
 __date__ = '2012-08-08'
 
-import sys, time
+import sys, time, warnings
 
 try:
     from collections import OrderedDict
@@ -32,18 +32,19 @@ from lib import FLILibrary, FLIError, FLIWarning, flidomain_t, flidev_t,\
 from device import USBDevice
 ###############################################################################
 DEBUG = False
+DEFAULT_BITDEPTH = '16bit'
 ###############################################################################
 class USBCamera(USBDevice):
     #load the DLL
     _libfli = FLILibrary.getDll(debug=DEBUG)
     _domain = flidomain_t(FLIDOMAIN_USB | FLIDEVICE_CAMERA)
     
-    def __init__(self, dev_name, model, bitdepth = '16bit'):
+    def __init__(self, dev_name, model, bitdepth = DEFAULT_BITDEPTH):
         USBDevice.__init__(self, dev_name = dev_name, model = model)
         self.hbin  = 1
         self.vbin  = 1
         self.bitdepth = bitdepth
-        self.set_bitdepth(bitdepth)
+
    
     def get_info(self):
         info = OrderedDict()        
@@ -147,7 +148,8 @@ class USBCamera(USBDevice):
         self._libfli.FLISetExposureTime(self._dev, exptime)
         self._libfli.FLISetFrameType(self._dev, frametype)
 
-    def set_bitdepth(self, bitdepth='8bit'):
+
+    def set_bitdepth(self, bitdepth):
         #FIXME untested
         bitdepth_var = flibitdepth_t()
         if bitdepth == '8bit':
@@ -156,7 +158,11 @@ class USBCamera(USBDevice):
             bitdepth_var.value = FLI_MODE_16BIT
         else:
             raise ValueError("'bitdepth' must be either '8bit' or '16bit'")
-        self._libfli.FLISetBitDepth(self._dev, bitdepth_var)
+        try:
+            self._libfli.FLISetBitDepth(self._dev, bitdepth_var) #FIXME always returns 'Inavlid Argument' error
+        except FLIError:
+            msg = "API currently does not allow changing bitdepth for this USB camera."
+            warnings.warn(FLIWarning(msg))
         self.bitdepth = bitdepth
 
     def take_photo(self):
@@ -223,7 +229,7 @@ if __name__ == "__main__":
     print "image size:", cam0.get_image_size()
     print "temperature:", cam0.get_temperature()
     cam0.set_image_binning(2,2)
-    cam0.set_bitdepth("16bit")
+    cam0.set_bitdepth("16bit") #this should generate a warning for any USB camera in libfli-1.104
     cam0.set_exposure(5)
     img = cam0.take_photo()
     print img
