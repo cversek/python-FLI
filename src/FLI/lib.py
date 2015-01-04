@@ -352,6 +352,7 @@ def chk_err(err):
 # Library Loader
 ###############################################################################
 LIBVERSIZ = 1024
+DEBUG_HOST_FILENAME = ".FLIDebug.log"
 
 class FLILibrary:
     __dll = None
@@ -403,7 +404,9 @@ class FLILibrary:
 
         #set debug level
         if debug:
-            FLILibrary.__dll.FLISetDebugLevel(None, FLIDEBUG_ALL)
+            #FIXME this filename is ignored on Linux where syslog(3) is used to send debug messages
+            host = c_char_p(DEBUG_HOST_FILENAME)
+            FLILibrary.__dll.FLISetDebugLevel(host, FLIDEBUG_ALL)
         
             
         return FLILibrary.__dll

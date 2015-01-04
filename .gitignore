@@ -1,0 +1,15 @@
+#compiled libraries
+*.so
+*.dll
+
+#Python compiled modules
+*.pyc
+
+#gedit temporary files
+*~
+
+#debugging logs
+*.log
+
+#Python package  info
+FLI.egg-info
