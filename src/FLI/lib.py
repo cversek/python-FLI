@@ -366,9 +366,9 @@ class FLILibrary:
                 from ctypes import windll
                 import platform
                 bits, linkage = platform.architecture()
-                if bits == '32bits':
+                if bits == '32bit':
                     FLILibrary.__dll = windll.LoadLibrary("libfli")
-                elif bits == '64bits':
+                elif bits == '64bit':
                     FLILibrary.__dll = windll.LoadLibrary("libfli64")
             else:
                 import warnings
@@ -413,7 +413,6 @@ class FLILibrary:
 ###############################################################################
 if __name__ == "__main__":
     import sys
-    sys.platform = "win"
     libfli = FLILibrary.getDll(debug=True)
     
     
