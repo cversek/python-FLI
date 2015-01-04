@@ -360,14 +360,32 @@ class FLILibrary:
                wrap_error_codes = True,
               ):
         if FLILibrary.__dll is None:
-            if sys.platform == 'linux2':
+            if sys.platform.startswith('linux'):
                 FLILibrary.__dll = cdll.LoadLibrary("libfli.so")
-            elif sys.platform == 'win32': #FIXME this hasn't been tested yet
+            elif sys.platform.startswith('win'):
                 from ctypes import windll
-                FLILibrary.__dll = windll.LoadLibrary("libfli")
+                import platform
+                bits, linkage = platform.architecture()
+                if bits == '32bits':
+                    FLILibrary.__dll = windll.LoadLibrary("libfli")
+                elif bits == '64bits':
+                    FLILibrary.__dll = windll.LoadLibrary("libfli64")
             else:
-                #try loading the library anyway   
-                raise RuntimeError("Platform not supported")
+                import warnings
+                msg = "platform '%s' not recognized" % (sys.platform,)
+                warnings.warn(Warning(msg))
+                #try loading the library anyway
+                libnames = ['libfli.dll','libfli64.dll','libfli.so','libfli64.so']
+                for libname in libnames:
+                    try:
+                        msg = "trying to load library named '%s'" % (libname,)
+                        FLILibrary.__dll = cdll.LoadLibrary(libname)
+                        break #load successful, stop trying
+                    except OSError, exc:
+                        msg = "failed to load library with error: %s" % (exc,)
+                        warnings.warn(Warning(msg))
+                else:
+                    raise RuntimeError("'libfli' could not be loaded, check warnings")
             #wrap the api functions
             for api_func_name, argtypes in _API_FUNCTION_PROTOTYPES:
                 api_func = FLILibrary.__dll.__getattr__(api_func_name)
@@ -394,4 +412,8 @@ class FLILibrary:
 #  TEST CODE
 ###############################################################################
 if __name__ == "__main__":
+    import sys
+    sys.platform = "win"
     libfli = FLILibrary.getDll(debug=True)
+    
+    
