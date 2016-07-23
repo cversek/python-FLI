@@ -12,3 +12,6 @@ http://www.flicamera.com/software/index.html
 The SDK library should be built as a shared object, named 'libfli.so', and 
 located in a standard library path, such as /usr/local/lib, or placed in the
 Python package folder after installation. (See the issue [Preparing the FLI SDK Dependency](https://github.com/cversek/python-FLI/issues/1))
+
+Those interested in better Windows API compatibility and a more comprehensive feature set
+should take a look at Charles Harris's Cython based wrappers: https://github.com/charris/pyfli
