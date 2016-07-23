@@ -51,6 +51,7 @@ class USBDevice(object):
         tmplist = POINTER(c_char_p)()
         cls._libfli.FLIList(cls._domain, byref(tmplist))      #allocates memory
         devs = []
+        i = 0;
         #process list only if it is not NULL
         if tmplist:
             while tmplist[i]: #process members only if they are not NULL
